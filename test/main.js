@@ -1,28 +1,28 @@
 /*global describe, it*/
-"use strict";
+'use strict';
 
-var fs = require("fs"),
-  es = require("event-stream"),
-  should = require("should"),
-  sinon = require("sinon"),
-  coveralls = require("coveralls");
+var fs = require('fs'),
+  es = require('event-stream'),
+  should = require('should'),
+  sinon = require('sinon'),
+  coveralls = require('coveralls');
 
-require("mocha");
+require('mocha');
 
-delete require.cache[require.resolve("../")];
+delete require.cache[require.resolve('../')];
 
-var gutil = require("gulp-util"),
-  gulpCoveralls = require("../");
+var Vinyl = require('vinyl'),
+  gulpCoveralls = require('../');
 
-describe("gulp-coveralls", function () {
+describe('gulp-coveralls', function () {
 
   var convertedFile = 'CONVERTED';
 
-  var expectedFile = new gutil.File({
-    path: "test/expected/lcov.info",
-    cwd: "test/",
-    base: "test/expected",
-    contents: fs.readFileSync("test/expected/lcov.info")
+  var expectedFile = new Vinyl({
+    path: 'test/expected/lcov.info',
+    cwd: 'test/',
+    base: 'test/expected',
+    contents: fs.readFileSync('test/expected/lcov.info')
   });
 
   afterEach(function() {
@@ -31,32 +31,32 @@ describe("gulp-coveralls", function () {
     coveralls.sendToCoveralls.restore && coveralls.sendToCoveralls.restore();
   });
 
-  describe("when successful", function() {
+  describe('when successful', function () {
 
     beforeEach(function() {
       // ugh...
-      sinon.stub(coveralls, "getBaseOptions").callsArgWith(0, null, {});
-      sinon.stub(coveralls, "convertLcovToCoveralls").callsArgWith(2, null, convertedFile);
-      sinon.stub(coveralls, "sendToCoveralls").callsArgWith(1, null, {}, '');
+      sinon.stub(coveralls, 'getBaseOptions').callsArgWith(0, null, {});
+      sinon.stub(coveralls, 'convertLcovToCoveralls').callsArgWith(2, null, convertedFile);
+      sinon.stub(coveralls, 'sendToCoveralls').callsArgWith(1, null, {}, '');
     });
 
-    it("should pass the file through via buffer", function (done) {
+    it('should pass the file through via buffer', function (done) {
 
-      var srcFile = new gutil.File({
-        path: "test/fixtures/lcov.info",
-        cwd: "test/",
-        base: "test/fixtures",
-        contents: fs.readFileSync("test/fixtures/lcov.info")
+      var srcFile = new Vinyl({
+        path: 'test/fixtures/lcov.info',
+        cwd: 'test/',
+        base: 'test/fixtures',
+        contents: fs.readFileSync('test/fixtures/lcov.info')
       });
 
       var stream = gulpCoveralls();
 
-      stream.on("error", function(err) {
+      stream.on('error', function (err) {
         should.exist(err);
         done(err);
       });
 
-      stream.on("data", function (newFile) {
+      stream.on('data', function (newFile) {
 
         should.exist(newFile);
         should.exist(newFile.contents);
@@ -69,20 +69,20 @@ describe("gulp-coveralls", function () {
       stream.end();
     });
 
-    it("should send the file contents to Coveralls", function (done) {
+    it('should send the file contents to Coveralls', function (done) {
 
-      var srcFile = new gutil.File({
-        path: "test/fixtures/lcov.info",
-        cwd: "test/",
-        base: "test/fixtures",
-        contents: fs.readFileSync("test/fixtures/lcov.info")
+      var srcFile = new Vinyl({
+        path: 'test/fixtures/lcov.info',
+        cwd: 'test/',
+        base: 'test/fixtures',
+        contents: fs.readFileSync('test/fixtures/lcov.info')
       });
 
       var stream = gulpCoveralls();
       stream.write(srcFile);
       stream.end();
 
-      stream.on("data", function () {
+      stream.on('data', function () {
         // ugh...
         sinon.assert.calledOnce(coveralls.getBaseOptions);
         sinon.assert.calledWith(coveralls.getBaseOptions, sinon.match.func);
@@ -98,27 +98,27 @@ describe("gulp-coveralls", function () {
 
   });
 
-  describe("when Coveralls responds with an error", function() {
+  describe('when Coveralls responds with an error', function () {
 
     beforeEach(function() {
       // ugh...
-      sinon.stub(coveralls, "getBaseOptions").callsArgWith(0, null, {});
-      sinon.stub(coveralls, "convertLcovToCoveralls").callsArgWith(2, null, convertedFile);
-      sinon.stub(coveralls, "sendToCoveralls").callsArgWith(1, null, { statusCode: 404 }, 'Blah blah blah');
+      sinon.stub(coveralls, 'getBaseOptions').callsArgWith(0, null, {});
+      sinon.stub(coveralls, 'convertLcovToCoveralls').callsArgWith(2, null, convertedFile);
+      sinon.stub(coveralls, 'sendToCoveralls').callsArgWith(1, null, {statusCode: 404}, 'Blah blah blah');
     });
 
-    it("should emit an error", function (done) {
+    it('should emit an error', function (done) {
 
-      var srcFile = new gutil.File({
-        path: "test/fixtures/lcov.info",
-        cwd: "test/",
-        base: "test/fixtures",
-        contents: fs.readFileSync("test/fixtures/lcov.info")
+      var srcFile = new Vinyl({
+        path: 'test/fixtures/lcov.info',
+        cwd: 'test/',
+        base: 'test/fixtures',
+        contents: fs.readFileSync('test/fixtures/lcov.info')
       });
 
       var stream = gulpCoveralls();
 
-      stream.on("error", function (error) {
+      stream.on('error', function (error) {
         should.exist(error);
         done();
       });
@@ -130,21 +130,21 @@ describe("gulp-coveralls", function () {
 
   });
 
-  describe("nulls", function() {
+  describe('nulls', function () {
 
     beforeEach(function() {
       // ugh...
-      sinon.stub(coveralls, "getBaseOptions");
-      sinon.stub(coveralls, "convertLcovToCoveralls");
-      sinon.stub(coveralls, "sendToCoveralls");
+      sinon.stub(coveralls, 'getBaseOptions');
+      sinon.stub(coveralls, 'convertLcovToCoveralls');
+      sinon.stub(coveralls, 'sendToCoveralls');
     });
 
-    it("should pass the file through when null", function(done) {
-      var nullFile = new gutil.File();
+    it('should pass the file through when null', function (done) {
+      var nullFile = new Vinyl();
 
       var stream = gulpCoveralls();
 
-      stream.on("data", function (newFile) {
+      stream.on('data', function (newFile) {
         should.exist(newFile);
         sinon.assert.notCalled(coveralls.getBaseOptions);
         sinon.assert.notCalled(coveralls.convertLcovToCoveralls);
@@ -158,26 +158,26 @@ describe("gulp-coveralls", function () {
 
   });
 
-  describe("streams", function() {
+  describe('streams', function () {
 
-    it("should error on stream", function (done) {
+    it('should error on stream', function (done) {
 
-      var srcFile = new gutil.File({
-        path: "test/fixtures/lcov.info",
-        cwd: "test/",
-        base: "test/fixtures",
-        contents: fs.createReadStream("test/fixtures/lcov.info")
+      var srcFile = new Vinyl({
+        path: 'test/fixtures/lcov.info',
+        cwd: 'test/',
+        base: 'test/fixtures',
+        contents: fs.createReadStream('test/fixtures/lcov.info')
       });
 
       var stream = gulpCoveralls();
 
-      stream.on("error", function(err) {
+      stream.on('error', function (err) {
         should.exist(err);
         done();
       });
 
-      stream.on("data", function (newFile) {
-        newFile.contents.pipe(es.wait(function(err, data) {
+      stream.on('data', function (newFile) {
+        newFile.contents.pipe(es.wait(function (err) {
           done(err);
         }));
       });
